@@ -14,7 +14,7 @@ def on_new_client(clientsocket,addr):
     msg = #something containing pl
     clientsocket.send(msg)
     while addr in pl:
-        msg = clientsocket.recv(#size of dead message)
+        msg = clientsocket.recv()#size of dead message)
         #do some checks and if msg == someWeirdSignal: break:
     #     print addr, ' >> ', msg
     #     msg = raw_input('SERVER >> ')

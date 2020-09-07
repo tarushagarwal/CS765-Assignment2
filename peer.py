@@ -1,7 +1,7 @@
 import csv
 import math
 import socket
-
+import thread
 # def connect_seeds():
 # 	with open('config.csv') as cfg:
 # 		cfg = csv.reader(cfg, delimiter=':')
@@ -11,9 +11,44 @@ import socket
 # 			pass
 
 
+seeds = []
+peers = []
+pl = {}
+listener = socket(AF_INET, SOCK_STREAM)
+selfAddr = listener.getsockname()
+# listener.bind(ip, port)
+listener.listen(10)
+messageList = []
+
+def generateMsg():
+	pass
+
+def forwardMsg(msg):
+	if msg in messageList:
+		pass
+	for peer in peers:
+		peer.send(msg)
+
+def testLiveness():
+	pass	
+
+def confirmLiveness(msg):
+	return msg+':'+selfAddr # check once
+
+def receiver():
+	connect_to = listener.recv() #for_updating_seeds_upon_finding out dead node
+	while True:
+		msg = listener.recv(1024)
+		if():
+			continue
+			#if null string received means connection dead but we still need to send livenesss requests and wait for response 
+		elif():
+			#for gossip
+		else:
+			#for liveness
+
 def main():
 	# connect_seeds()
-	seeds = []
 	with open('config.csv') as cfg:
 		cfg = list(csv.reader(cfg, delimiter=':'))
 		n = len((cfg))
@@ -27,22 +62,34 @@ def main():
 			seeds.append(s)
 	
 	#get PL
-	pl = {}
 	for s in seeds:
+		s.send()#listener port number)
 		pl = pl.union(s.recv(1024))
 
 	#connecting to peers 
 	# print(pl)
 	pl = list(pl)
 	pl = random.sample(pl, random.randint(1,4))
-	peers = []
+
 	for peer in pl:
 		try: 
-			    p = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		    p = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		except socket.error as err: 
 		    print("error creating socket ",err )
-		peer.split(':')
-		p.connect((peer))
+		ip,port = peer.split(':')
+		p.connect((ip,port))
+		thread.start_new_thread(receiver, (p, [ip,port]))
+		peers.append(p)
+
+	thread.start_new_thread( generateMsg )
+	thread.start_new_thread( testLiveness )
+
+	while True:
+		c, addr = listener.accept()
+	    thread.start_new_thread(receiver,(c,addr))
+		#accept listening port
+	    peers.append(c)
+
 
 
 
