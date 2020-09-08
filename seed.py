@@ -15,8 +15,8 @@ def on_new_client(clientsocket,addr):
     try:
         l_addr = clientsocket.recv(1024)
         l_addr = json.loads(l_addr.decode())
-        print(type(l_addr))
-        print(l_addr)
+        # print(type(l_addr))
+        # print(l_addr)
         # l_addr = l_addr.decode()
         msg = json.dumps(pl)#something containing pl
         clientsocket.send(msg.encode())
@@ -26,6 +26,7 @@ def on_new_client(clientsocket,addr):
             msg = msg.decode()
             m = msg.split(":")
             assert(m[0] == "Dead Node")
+            print(msg)
             if (m[1], int(m[2])) in pl:
                 pl.remove((m[1],int(m[2])))
         clientsocket.close()
@@ -33,10 +34,10 @@ def on_new_client(clientsocket,addr):
         print("error seed on_new_client")
 
 while(True):
-    print("Send Client")
-    print(s.getsockname())
+    # print("Send Client")
     c, addr = s.accept()
     # pl.append(addr)
+    print("new connection request from : " + addr[0] + ':' + str(addr[1]))
     start_new_thread(on_new_client,(c,addr))
 
 s.close()

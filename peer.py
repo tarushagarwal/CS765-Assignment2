@@ -21,6 +21,7 @@ print(selfAddr)
 
 def broadcastMsg(msg):
 	msg = msg.encode()
+	print(peers)
 	for p in peers:
 		p.send(msg)
 
@@ -28,6 +29,7 @@ def broadcastMsg(msg):
 def generateMsg():
 	count = 0
 	while count<10:
+		print(count)
 		toSend = str(time.strftime("%x,%X", time.gmtime())) + ':' + str(selfAddr[0]) + ':' + str(count+1)
 		broadcastMsg(toSend)
 		count += 1
@@ -36,6 +38,9 @@ def generateMsg():
 def forwardMsg(msg, conn):
 	if msg in messageList:
 		pass
+	print(msg, end='')
+	senderAddr = conn.getsockname()
+	print("  local timestamp :" + str(time.strftime("%x,%X", time.gmtime())) + senderAddr[0] + str(senderAddr[1]))
 	messageList.append(hash(msg))
 	msg = msg.encode()
 	for p in peers:
@@ -53,10 +58,11 @@ def reportDead(Addr):
 def testLiveness():
 	while True:
 		time.sleep(13)
+		print("checking")
 		toSend = 'Liveness Request:'+str(time.strftime("%x,%X", time.gmtime()))+':'+str(selfAddr[0]) +','+str(selfAddr[1])
 		for key,value in livenesssTestCount.items():
 			if value == 3:
-				livenesssTestCount.remove(key)
+				livenesssTestCount.pop(key)
 				reportDead(key)
 				continue
 			livenesssTestCount[key] += 1
@@ -66,22 +72,26 @@ def testLiveness():
 def confirmLiveness(msg):
 	return 'Liveness Reply'+':'+msg[1]+':'+msg[2]+':'+str(selfAddr[0]) +','+str(selfAddr[1])# check once
 
-def receiver():
+def receiver(listener):
 	peerAddr = listener.recv(1024) #for_updating_seeds_upon_finding out dead node
 	while True:
 		msg = listener.recv(1024)
+		msg = msg.decode()
+		print(msg)
 		if(msg == ''):
 			listener.close()
 			peers.remove(listener)
 			break
 			#if null string received means connection dead but we still need to send livenesss requests and wait for response but calling recv again gives error
+		temp = msg
 		msg = msg.split(':')
 		if(msg[0] == 'Liveness Request' ):
 			confirmLiveness(msg)
 		elif(msg[0] == 'Liveness Reply'):
+			print(msg)
 			livenesssTestCount[msg[-2].split(',')] -= 1
 		else:
-			forwardMsg(msg, listener)
+			forwardMsg(temp, listener)
 
 def main():
 	# connect_seeds()
@@ -99,27 +109,32 @@ def main():
 
 	
 	#get PL
-	peerList = set()
+	peerList = []
 	for s in seeds:
 		data = json.dumps(selfAddr)
 		s.send(data.encode())#listener port number
 		msg = s.recv(1024)
 		msg = msg.decode()
 		msg = json.loads(msg)
-		print(msg)
-		print(type(msg))
-		peerList.union(set(tuple(i) for i in msg))
+		# print(msg)
+		# print(type(msg))
+		peerList.extend(msg)
 		# peerList.union(set(msg))
 
 	# pl =pl.unique() ???
 	#connecting to peers 
 	# print(pl)
-	peerList = list(peerList)
+	print("xxx")
+	print(peerList)
+	print("yyy")
+	peerList = set(tuple(i) for i in peerList)
+	print(peerList)
 	noOfPeers = len(peerList)
 	if noOfPeers>1:
 		upperLimit = min(noOfPeers, 4)
 		peerList = random.sample(peerList, random.randint(1,upperLimit))
 
+	print(peerList)
 	for peerAddr in peerList:
 		try: 
 			p = socket(AF_INET, SOCK_STREAM)
@@ -128,7 +143,7 @@ def main():
 		p.connect(peerAddr)
 		peers.append(p)
 		livenesssTestCount[peerAddr] = 0
-		thread.start_new_thread(receiver, (p, peerAddr))
+		thread.start_new_thread(receiver, (p,))
 		
 		# addrToSocket[(ip,port)] = p
 
@@ -139,7 +154,7 @@ def main():
 		c, addr = listener.accept()
 		peers.append(c)
 		livenesssTestCount[addr] = 0
-		thread.start_new_thread(receiver,(c,addr))
+		thread.start_new_thread(receiver,(c,))
 		#accept listening port
 		
 		# addrToSocket[addr] = c 
