@@ -10,8 +10,8 @@ seeds = []
 peers = []
 peerList = set()
 listener = socket(AF_INET, SOCK_STREAM)
-selfAddr = list(listener.getsockname())
 listener.listen(10)
+selfAddr = list(listener.getsockname())
 messageList = []
 livenesssTestCount = {}
 print(type(selfAddr))
