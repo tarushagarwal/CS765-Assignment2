@@ -12,19 +12,25 @@ pl = []
 # output_file = 
 
 def on_new_client(clientsocket,addr):
-    l_addr = clientsocket.recv(1024)
-    msg = json.dumps(pl)#something containing pl
-    clientsocket.send(msg.encode())
-    pl.append(l_addr)
-    while l_addr in pl:
-        msg = clientsocket.recv(1024)#more than size of dead message format
-        msg = msg.decode()
-        m = msg.split(":")
-        assert(m[0] == "Dead Node")
-        if (m[1], int(m[2])) in pl:
-            pl.remove((m[1],int(m[2])))
-    clientsocket.close()
-
+    try:
+        l_addr = clientsocket.recv(1024)
+        l_addr = json.loads(l_addr.decode())
+        print(type(l_addr))
+        print(l_addr)
+        # l_addr = l_addr.decode()
+        msg = json.dumps(pl)#something containing pl
+        clientsocket.send(msg.encode())
+        pl.append(tuple(l_addr))
+        while l_addr in pl:
+            msg = clientsocket.recv(1024)#more than size of dead message format
+            msg = msg.decode()
+            m = msg.split(":")
+            assert(m[0] == "Dead Node")
+            if (m[1], int(m[2])) in pl:
+                pl.remove((m[1],int(m[2])))
+        clientsocket.close()
+    except:
+        print("error seed on_new_client")
 
 while(True):
     print("Send Client")
