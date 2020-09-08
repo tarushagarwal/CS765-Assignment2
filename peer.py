@@ -56,7 +56,7 @@ def testLiveness():
 		toSend = 'Liveness Request:'+str(time.strftime("%x,%X", time.gmtime()))+':'+str(selfAddr[0]) +','+str(selfAddr[1])
 		for key,value in livenesssTestCount.items():
 			if value == 3:
-				livenesssTestCount.remove[key]
+				livenesssTestCount.remove(key)
 				reportDead(key)
 				continue
 			livenesssTestCount[key] += 1
