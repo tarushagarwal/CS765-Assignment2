@@ -16,7 +16,7 @@ def on_new_client(clientsocket,addr):
     msg = json.dumps(pl)#something containing pl
     clientsocket.send(msg.encode())
     pl.append(l_addr)
-    while addr in pl:
+    while l_addr in pl:
         msg = clientsocket.recv(1024)#more than size of dead message format
         msg = msg.decode()
         m = msg.split(":")
@@ -33,3 +33,5 @@ while(True):
     start_new_thread(on_new_client,(c,addr))
 
 s.close()
+
+#try-catch, output file, number of listeners, print statement

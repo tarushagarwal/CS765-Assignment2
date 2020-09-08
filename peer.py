@@ -2,6 +2,7 @@ import csv
 import math
 import socket
 import thread
+import random
 # def connect_seeds():
 # 	with open('config.csv') as cfg:
 # 		cfg = csv.reader(cfg, delimiter=':')
@@ -50,7 +51,7 @@ def receiver():
 def main():
 	# connect_seeds()
 	with open('config.csv') as cfg:
-		cfg = list(csv.reader(cfg, delimiter=':'))
+		cfg = list(csv.reader(cfg, delimiter=':')) # delimiter : why?
 		n = len((cfg))
 		cfg = random.sample((cfg), (math.floor(n/2)+1))
 		for entry in cfg:
@@ -64,8 +65,12 @@ def main():
 	#get PL
 	for s in seeds:
 		s.send()#listener port number)
-		pl = pl.union(s.recv(1024))
+		msg = s.recv(1024)
+		msg = msg.decode()
+		msg = json.loads(msg)
+		pl = pl.union(msg)
 
+	# pl =pl.unique() ???
 	#connecting to peers 
 	# print(pl)
 	pl = list(pl)
