@@ -34,6 +34,7 @@ def on_new_client(clientsocket,addr):
 
 while(True):
     print("Send Client")
+    print(s.getsockname())
     c, addr = s.accept()
     # pl.append(addr)
     start_new_thread(on_new_client,(c,addr))

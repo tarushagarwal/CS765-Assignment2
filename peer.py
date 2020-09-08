@@ -28,7 +28,7 @@ def broadcastMsg(msg):
 def generateMsg():
 	count = 0
 	while count<10:
-		toSend = str(time.strftime("%x,%X", ts)) + ':' + str(selfAddr[0]) + ':' + str(count+1)
+		toSend = str(time.strftime("%x,%X", time.gmtime())) + ':' + str(selfAddr[0]) + ':' + str(count+1)
 		broadcastMsg(toSend)
 		count += 1
 		time.sleep(5)
@@ -45,7 +45,7 @@ def forwardMsg(msg, conn):
 
 
 def reportDead(Addr):
-	toSend = 'Dead Node:'+Addr[0]+':' + Addr[1]+':' +str(time.strftime("%x,%X", ts)) + ':' + selfAddr[0] +','+str(selfAddr[1])
+	toSend = 'Dead Node:'+Addr[0]+':' + Addr[1]+':' +str(time.strftime("%x,%X", time.gmtime())) + ':' + selfAddr[0] +','+str(selfAddr[1])
 	for seed in seeds:
 		seed.send(toSend.encode())
 
@@ -53,7 +53,7 @@ def reportDead(Addr):
 def testLiveness():
 	while True:
 		time.sleep(13)
-		toSend = 'Liveness Request:'+str(time.strftime("%x,%X", ts))+':'+str(selfAddr[0]) +','+str(selfAddr[1])
+		toSend = 'Liveness Request:'+str(time.strftime("%x,%X", time.gmtime()))+':'+str(selfAddr[0]) +','+str(selfAddr[1])
 		for key,value in livenesssTestCount.items():
 			if value == 3:
 				livenesssTestCount.remove[key]
