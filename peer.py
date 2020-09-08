@@ -122,8 +122,8 @@ def main():
 
 	for peerAddr in peerList:
 		try: 
-			p = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		except socket.error as err: 
+			p = socket(AF_INET, SOCK_STREAM)
+		except error as err: 
 			print("error creating socket ",err )
 		p.connect(peerAddr)
 		peers.append(p)
