@@ -11,54 +11,58 @@ seeds = []
 peers = []
 peerList = set()
 listener = socket(AF_INET, SOCK_STREAM)
-ip = input("Enter ip: ")
+ip = input("Enter IP: ")
 listener.bind((ip, 0))
 listener.listen(10)
-selfAddr = list(listener.getsockname())
-messageList = []
+selfAddr = list(listener.getsockname())		#acquire self address where it will listen to be shared wtih other peers
+messageList = []							#hashed message list
 livenessTestCount = {}
-print(selfAddr)
+print(selfAddr)								#not required maybe
 lock = Lock()
 
+f = open('outputfile.txt', 'a+')
 
-def broadcastMsg(msg):
+def broadcastMsg(msg):						#broadcast message to be sent to peers like gossip, liveliness request
 	msg = (msg + '|').encode()
 	for p in peers:
 		p.send(msg)
 
 
-def generateMsg():
+def generateMsg():							#thread to generates gossip and calls broadcast function for the ten gossip messages
 	count = 0
 	while count<10:
-		toSend = str(time.strftime("%Y/%m/%d %H-%M-%S", time.gmtime())) + ':' + str(selfAddr[0]) + ',' + str(selfAddr[1]) + ':' + str(count+1)
+		toSend = str(time.strftime("%Y/%m/%d %H-%M-%S", time.gmtime())) + ':' + str(selfAddr[0]) + ',' + str(selfAddr[1]) + ':' + str(count+1)		#only requires self address to send
 		broadcastMsg(toSend)
 		count += 1
 		time.sleep(5)
 
-def forwardMsg(msg, conn):
+def forwardMsg(msg, conn):					#forwards the recieved messages after checking in message list (used locks to handle simultaneously recieved messages)
 	lock.acquire()
-	if hash(msg) in messageList:
+	if hash(msg) in messageList:			#checking in message list
 		lock.release()
 		return
-	messageList.append(hash(msg))
+	messageList.append(hash(msg))			#appending in message list
 	lock.release()
-	senderAddr = conn.getsockname()
+	senderAddr = conn.getsockname()			#requires the address of peer who forwaded the message
 	print(msg + " local timestamp: " + str(time.strftime("%Y/%m/%d %H-%M-%S", time.gmtime())) + senderAddr[0] + ',' + str(senderAddr[1]))
-	
+	f.write(msg + " local timestamp: " + str(time.strftime("%Y/%m/%d %H-%M-%S", time.gmtime())) + senderAddr[0] + ',' + str(senderAddr[1]) + '\n')
+	f.flsuh()
 	msg = (msg + '|').encode()
-	for p in peers:
+	for p in peers:							#forwarding it to all peers except the sender
 		if p != conn:
 			p.send(msg)
 
 
-def reportDead(Addr):
+def reportDead(Addr):						#reporting an dead node
 	toSend = 'Dead Node:'+str(Addr[0])+':' + str(Addr[1])+':' +str(time.strftime("%Y/%m/%d %H-%M-%S", time.gmtime())) + ':' + str(selfAddr[0]) +','+str(selfAddr[1])
 	print(toSend)
+	f.write(toSend + '\n')
+	f.flsuh()
 	for seed in seeds:
 		seed.send((toSend + '|').encode())
 
 
-def testLiveness():
+def testLiveness():							#liveliness thread
 	while True:
 		time.sleep(13)
 		toSend = 'Liveness Request:'+str(time.strftime("%Y/%m/%d %H-%M-%S", time.gmtime()))+':'+str(selfAddr[0]) +','+str(selfAddr[1])
@@ -133,6 +137,7 @@ def main():
 	peerList = set(tuple(i) for i in peerList)
 	print("List of Peer Nodes received: ", end='')
 	print(peerList)
+	# f.write(peerList)
 	noOfPeers = len(peerList)
 	if noOfPeers>1:
 		upperLimit = min(noOfPeers, 4)
