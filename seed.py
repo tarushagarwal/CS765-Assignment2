@@ -26,14 +26,23 @@ def on_new_client(clientsocket,addr):
         while l_addr in pl:
             msg = clientsocket.recv(1024)#more than size of dead message format
             msg = msg.decode()
-            m = msg.split(":")
-            assert(m[0] == "Dead Node")
+            print("::::::::: ", end=' ')
+            msg = msg.split('|')
             print(msg)
-            if (m[1], int(m[2])) in pl:
-                pl.remove((m[1],int(m[2])))
+            msg.pop(-1)
+            for item in msg:
+                if item == '':
+                    continue
+                m = item.split(":")
+                # assert(m[0] == "Dead Node")
+                print(item)
+                if (m[1], int(m[2])) in pl:
+                    pl.remove((m[1],int(m[2])))
         clientsocket.close()
-    except:
-        print("connection closed")
+    except err:
+        print(err)
+        print("connection closed with: " + l_addr[0] + ':' + str(l_addr[1]))
+        pl.remove((l_addr[0],int(l_addr[1])))
 
 while(True):
     # print("Send Client")

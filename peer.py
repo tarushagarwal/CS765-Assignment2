@@ -5,6 +5,7 @@ import _thread as thread
 import random
 import time
 import json
+from threading import *
 
 seeds = []
 peers = []
@@ -18,11 +19,12 @@ messageList = []
 livenessTestCount = {}
 # print(type(selfAddr))
 print(selfAddr)
+lock = Lock()
 # addrToSocket = {}
 
 
 def broadcastMsg(msg):
-	msg = msg.encode()
+	msg = (msg + '|').encode()
 	# print(peers)
 	for p in peers:
 		p.send(msg)
@@ -38,18 +40,22 @@ def generateMsg():
 		time.sleep(5)
 
 def forwardMsg(msg, conn):
+	lock.acquire()
 	if hash(msg) in messageList:
+		lock.release()
 		return
+	messageList.append(hash(msg))
+	lock.release()
 	print(msg, end='')
 	senderAddr = conn.getsockname()
-	print("  local timestamp :" + str(time.strftime("%Y/%m/%d %H-%M-%S", time.gmtime())) + senderAddr[0] + ',' + str(senderAddr[1]))
+	print("  local timestamp: " + str(time.strftime("%Y/%m/%d %H-%M-%S", time.gmtime())) + senderAddr[0] + ',' + str(senderAddr[1]))
 	# print(conn)
 	# print(peers)
 	# if conn in peers:
 	# 	print("yayyyyyyyyyyyyyyyyyyyyyy ")
 	# print("::::::::::")
-	messageList.append(hash(msg))
-	msg = msg.encode()
+	
+	msg = (msg + '|').encode()
 	for p in peers:
 		if p != conn:
 			p.send(msg)
@@ -57,7 +63,7 @@ def forwardMsg(msg, conn):
 
 
 def reportDead(Addr):
-	toSend = 'Dead Node:'+str(Addr[0])+':' + str(Addr[1])+':' +str(time.strftime("%Y/%m/%d %H-%M-%S", time.gmtime())) + ':' + str(selfAddr[0]) +','+str(selfAddr[1])
+	toSend = 'Dead Node:'+str(Addr[0])+':' + str(Addr[1])+':' +str(time.strftime("%Y/%m/%d %H-%M-%S", time.gmtime())) + ':' + str(selfAddr[0]) +','+str(selfAddr[1]) + '|'
 	for seed in seeds:
 		seed.send(toSend.encode())
 
@@ -80,29 +86,38 @@ def testLiveness():
 	pass	
 
 def confirmLiveness(msg, conn):
-	toSend = 'Liveness Reply'+':'+msg[1]+':'+msg[2]+':'+str(selfAddr[0]) +','+str(selfAddr[1])
+	toSend = 'Liveness Reply'+':'+msg[1]+':'+msg[2]+':'+str(selfAddr[0]) +','+str(selfAddr[1]) + '|'
 	conn.send(toSend.encode())# check once
 
 def receiver(listener):
 	while True:
 		msg = listener.recv(1024)
 		msg = msg.decode()
-		print("Received :::   " + msg)
+		# print("Received 1 :::   " + msg)
 		if(msg == ''):
 			listener.close()
 			peers.remove(listener)
 			break
-			#if null string received means connection dead but we still need to send livenesss requests and wait for response but calling recv again gives error
-		temp = msg
-		msg = msg.split(':')
-		if(msg[0] == 'Liveness Request' ):
-			confirmLiveness(msg, listener)
-		elif(msg[0] == 'Liveness Reply'):
-			# print(livenessTestCount.keys())
-			ip, port = msg[-1].split(',')
-			livenessTestCount[(ip, int(port))] -= 1
-		else:
-			forwardMsg(temp, listener)
+			#if null string received means connection dead but we still need to send livenesss requests and wait for response but calling recv again gives error	
+		# print("Received orig :::   " + msg)
+		msg = msg.split('|')
+		msg.pop(-1)
+		# print("Received 2 :::   ", end = " ")
+		# print(msg)
+		for item in msg:
+			temp = item
+			item = item.split(':')
+			if(item == ''):
+				continue
+			if(item[0] == 'Liveness Request' ):
+				confirmLiveness(item, listener)
+			elif(item[0] == 'Liveness Reply'):
+				# print(livenessTestCount.keys())
+				print("Received :::   " + temp)
+				ip, port = item[-1].split(',')
+				livenessTestCount[(ip, int(port))] -= 1
+			else:
+				forwardMsg(temp, listener)
 
 def main():
 	# connect_seeds()
