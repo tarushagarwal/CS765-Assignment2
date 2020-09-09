@@ -21,6 +21,8 @@ def on_new_client(clientsocket,addr):
         msg = json.dumps(pl)#something containing pl
         clientsocket.send(msg.encode())
         pl.append(tuple(l_addr))
+        l_addr = tuple(l_addr)
+        print("new connection request from : " + l_addr[0] + ':' + str(l_addr[1]))
         while l_addr in pl:
             msg = clientsocket.recv(1024)#more than size of dead message format
             msg = msg.decode()
@@ -37,7 +39,6 @@ while(True):
     # print("Send Client")
     c, addr = s.accept()
     # pl.append(addr)
-    print("new connection request from : " + addr[0] + ':' + str(addr[1]))
     start_new_thread(on_new_client,(c,addr))
 
 s.close()
