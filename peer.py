@@ -10,11 +10,13 @@ seeds = []
 peers = []
 peerList = set()
 listener = socket(AF_INET, SOCK_STREAM)
+ip = input("Enter ip: ")
+listener.bind((ip, 0))
 listener.listen(10)
 selfAddr = list(listener.getsockname())
 messageList = []
 livenessTestCount = {}
-print(type(selfAddr))
+# print(type(selfAddr))
 print(selfAddr)
 # addrToSocket = {}
 
@@ -40,12 +42,12 @@ def forwardMsg(msg, conn):
 		return
 	print(msg, end='')
 	senderAddr = conn.getsockname()
-	print("  local timestamp :" + str(time.strftime("%Y/%m/%d %H-%M-%S", time.gmtime())) + senderAddr[0] + str(senderAddr[1]))
+	print("  local timestamp :" + str(time.strftime("%Y/%m/%d %H-%M-%S", time.gmtime())) + senderAddr[0] + ',' + str(senderAddr[1]))
 	# print(conn)
 	# print(peers)
-	if conn in peers:
-		print("yayyyyyyyyyyyyyyyyyyyyyy ")
-	print("::::::::::")
+	# if conn in peers:
+	# 	print("yayyyyyyyyyyyyyyyyyyyyyy ")
+	# print("::::::::::")
 	messageList.append(hash(msg))
 	msg = msg.encode()
 	for p in peers:
@@ -96,7 +98,7 @@ def receiver(listener):
 		if(msg[0] == 'Liveness Request' ):
 			confirmLiveness(msg, listener)
 		elif(msg[0] == 'Liveness Reply'):
-			print(livenessTestCount.keys())
+			# print(livenessTestCount.keys())
 			ip, port = msg[-1].split(',')
 			livenessTestCount[(ip, int(port))] -= 1
 		else:
@@ -133,11 +135,11 @@ def main():
 	# pl =pl.unique() ???
 	#connecting to peers 
 	# print(pl)
-	print("xxx")
-	print(peerList)
-	print("yyy")
+	# print("xxx")
+	# print(peerList)
+	# print("yyy")
 	peerList = set(tuple(i) for i in peerList)
-	print(peerList)
+	# print(peerList)
 	noOfPeers = len(peerList)
 	if noOfPeers>1:
 		upperLimit = min(noOfPeers, 4)

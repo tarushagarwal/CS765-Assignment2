@@ -33,7 +33,7 @@ def on_new_client(clientsocket,addr):
                 pl.remove((m[1],int(m[2])))
         clientsocket.close()
     except:
-        print("error seed on_new_client")
+        print("connection closed")
 
 while(True):
     # print("Send Client")
