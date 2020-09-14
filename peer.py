@@ -20,7 +20,7 @@ livenessTestCount = {}
 print(selfAddr)								#not required maybe
 lock = Lock()
 
-f = open('outputfile.txt', 'a+')
+f = open('outputpeer.txt', 'a+')
 
 def broadcastMsg(msg):						#broadcast message to be sent to peers like gossip, liveliness request
 	msg = (msg + '|').encode()

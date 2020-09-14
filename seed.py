@@ -9,7 +9,7 @@ s = socket(AF_INET, SOCK_STREAM)
 s.bind((ip, port))
 s.listen(20)                                                # maximum peers it can listen to
 pl = []                                                     # list of peers connected to it
-f = open('outputfile.txt', 'a+')                            # opens the outputfile
+f = open('outputseed.txt', 'a+')                            # opens the outputfile
 
 def on_new_client(clientsocket,addr):
     l_addr = clientsocket.recv(1024)                        #recieveing the listening address of the new peer
